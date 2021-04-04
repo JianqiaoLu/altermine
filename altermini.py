@@ -488,7 +488,7 @@ def getpedge(i):
         x = 2
         for j in range(1, i - 1):
             edge.append([j, j + 1, x])
-        
+
         res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
         phi, flow, energy_phi = electrical_flow(i, res)
         cap = [x[2] for x in edge]
@@ -496,12 +496,12 @@ def getpedge(i):
         gamma_w = [cong[i] ** 2 / energy_phi for i in range(m)]
         gamma = [w0[i] * cong[i] ** 2 / energy_phi for i in range(m)]
         ans = [w0[i] * (math.sqrt(gamma_w[i]) - 1) ** 2 for i in range(m)]
-        
 
         if abs(gamma_w[-1] - 1) < 1e-2:
-            import pdb 
+            import pdb
+
             pdb.set_trace()
-            
+
             return i, edge
 
 
@@ -522,12 +522,10 @@ def nparrelledge(i):
     gamma = [w0[i] * cong[i] ** 2 / energy_phi for i in range(m)]
     ans = [w0[i] * (math.sqrt(gamma_w[i]) - 1) ** 2 for i in range(m)]
     # if abs(gamma_w[-1] - 1) < 1e-2:
-        # import pdb 
-        # pdb.set_trace()
-        
-        
-    return i, edge, w0, res,ans, x
+    # import pdb
+    # pdb.set_trace()
 
+    return i, edge, w0, res, ans, x
 
 
 def onestepmini(i):
@@ -542,8 +540,7 @@ def onestepmini(i):
     w1 = update_w(phi, edge)
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w1[i]] for i in range(m)]
     phi, flow, energy_phi_1 = electrical_flow(n, res)
-    
-    
+
     data[0].append(energy_phi_1)
     data[1].append(energy_phi_1 / energy_phi_0)
     return data
@@ -563,167 +560,50 @@ def altertating_minimization_simple(n, edge, min_cuts=[], cut_val=1):
 
         ans2 = sum([(phi[i] - phi[j]) ** 2 * r for i, j, r in res])
         # res = [[i, j, m* c ** 2] for i, j, c in edge]
-        r_e = [1/r for i,j,r in res]
+        r_e = [1 / r for i, j, r in res]
         R = sum(r_e)
-        ans = 1/R
-        
-      
-        energy_e = [(phi[i] - phi[j])**2 * r for i,j,r in res]
-        gamma= [i/sum(energy_e) for i in energy_e]
-        gamma_w = [gamma[i]/w[i] for i in range(m)]
-        
+        ans = 1 / R
+
+        energy_e = [(phi[i] - phi[j]) ** 2 * r for i, j, r in res]
+        gamma = [i / sum(energy_e) for i in energy_e]
+        gamma_w = [gamma[i] / w[i] for i in range(m)]
+
         if len(data2) and abs(data2[-1] - (energy_phi)) < 1e-5:
             break
         data2.append(energy_phi)
         w = update_w(phi, edge)
         res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
         energy_w = sum([(phi[i] - phi[j]) ** 2 * r for i, j, r in res])
-        
+
     return phi, math.sqrt(energy_phi), data2, "-"
 
 
-def altertating_minimization(n, edge, min_cuts=[], cut_val=1):
+def altertating_minimization(n, edge):
 
     global eps
     m = len(edge)
     # eps = .01/m
-    data = [[]]
 
     # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
     # w0 = [1 / m for i in range(m)]
     w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
     # w0 = [ 0.49, 0.005, 0.5, 0.005]
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
-    cap = [x[2] for x in edge]
-    data4 = [[] for i in range(len(min_cuts))]
-    data5 = [[] for i in range(len(min_cuts))]
-    data6 = [[] for i in range(len(min_cuts) + 1)]
-    data7 = [[] for i in range(len(min_cuts))]
-    data8 = [[] for i in range(len(min_cuts))]
-    flag = "y"
-    # res = [[i, j, m* c ** 2] for i, j, c in edge]
-    for j in range(len(min_cuts)):
-        nu = 1
-        eta = 0
-        for i in min_cuts[j]:
-            nu *= w0[i] ** (cap[i] / cut_val)
-            eta += w0[i]
-        data4[j].append(nu)
-        data5[j].append(eta)
-
-    # zhiyi真的是天才
-    data1 = []
-    data2 = []
-    data3 = [w0]
-    data9 = [[], [], [], [], []]
-    flag2 = "y"
+    pre_energy = 0
 
     for round in range(1000):
-        phi, flow, energy_phi = electrical_flow(n, res)
-        # if round == 8:
-        # import pdb
-        # pdb.set_trace()
+        phi, flow, energy = electrical_flow(n, res)
 
-        if len(data2):
-            data9[1].append(energy_phi / data2[-1])
+        if abs(energy - pre_energy) < 1e-5:
+          break
 
-        cong = [abs(flow[i][2]) / cap[i] for i in range(m)]
-        gamma = [w0[i] * cong[i] ** 2 / energy_phi for i in range(m)]
-        gamma_w = [cong[i] ** 2 / energy_phi for i in range(m)]
-        sqrt_gamma_m_w = [math.sqrt(w0[i] * gamma[i]) for i in range(m)]
-        ans = [w0[i] * (math.sqrt(gamma_w[i]) - 1) ** 2 for i in range(m)]
-        ans2 = [
-            math.sqrt(gamma_w[i]) * (math.sqrt(gamma_w[i]) - 1) ** 2 * w0[i] ** 2
-            + w0[i] * (math.sqrt(gamma_w[i]) - 1) ** 2
-            for i in range(m)
-        ]
-
-        jianshao = math.exp(-sum(ans))
-        jianshao2 = math.exp(-sum(ans2))
-        jianshao3 = 0
-        sqrt_gamma_w = [math.sqrt(gamma[i] / w0[i]) for i in range(m)]
-        for i in range(m):
-            for j in range(i + 1, m):
-                jianshao3 += (
-                    (sqrt_gamma_w[i] + sqrt_gamma_w[j])
-                    * (sqrt_gamma_w[i] - 1)
-                    * (sqrt_gamma_w[j] - 1)
-                    * w0[i]
-                    * w0[j]
-                )
-
-        jianshao3 = math.exp(-sum(ans2) - jianshao3)
-        data9[0].append([jianshao, jianshao2, jianshao3])
-        data9[3].append(w0)
-        data9[4].append(gamma)
-        data9[2].append(sqrt_gamma_m_w)
-        
-
-        if len(data2) and abs(data2[-1] - (energy_phi)) < 1e-5:
-            break
         w = update_w(phi, edge)
 
-        w_comp = np.array(w) / np.array(w0)
-
         res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
-        energy_w = sum([(phi[i] - phi[j]) ** 2 * r for i, j, r in res])
 
-        energy_comp = math.log(math.sqrt(energy_phi / energy_w))
-        cong = [abs(flow[i][2]) / cap[i] for i in range(m)]
-        e_cong = cong.index(max(cong))
-        w0 = w
-        update_data(phi, energy_phi, w, data1, data2, data3)
-        if len(min_cuts):
-            data6[0].append(energy_comp)
-            update_data(phi, energy_phi, w, data1, data2, data3)
-            # if len(min_cuts):
-            cap_comp = [x[2] / cut_val for x in edge]
-            import pdb 
-            pdb.set_trace()
-            
-            calnu(w, min_cuts, cap_comp, data4, data5)
-            
-            caljensen(min_cuts, cap_comp, w_comp, data6)
-            flag = calflag(min_cuts, data6)
-            calab(min_cuts, w_comp, data7)
-            flag3 = "n"
-            id = 0
-            for min_cut in min_cuts:
-                b = data7[id][-1][1]
-                a = data7[id][-1][0]
-                val = (
-                    math.log((b - a) / (math.log(b) - math.log(a)))
-                    - math.log(a * b)
-                    - 1
-                    + (b * math.log(b) - a * math.log(a)) / (b - a)
-                )
-                data8[id].append(val)
-                id += 1
-                if e_cong in min_cut:
-                    flag3 = "y"
-            if flag3 == "n":
-                flag2 = "n" + str(round)
+        pre_energy  = energy
 
-    if len(min_cuts):
-        ceshi = data7.copy()
-        ceshi = np.array(ceshi)[0]
-        a = np.min(ceshi, axis=0)[0]
-        b = np.max(ceshi, axis=0)[-1]
-        woshi = np.sum(ceshi[:, 0] <= (1 - 1e-3))
-        a = "{:.2}".format(a)
-        b = "{:.2}".format(b)
-        flag += "_" + flag2 + "_" + str(woshi) + "_" + str(a) + "_" + str(b) + "num"
-        data.append(data1)
-        data.append(data2)
-        data.append(data3)
-        data.append(data4)
-        data.append(data5)
-        data.append(data6)
-        data.append(data7)
-        data.append(data8)
-        data.append(data9)
-
-    return phi, math.sqrt(energy_phi), data, flag
+    return phi, energy
 
 
 # In[ ]: j
