@@ -351,8 +351,8 @@ def electrical_flow(n, res):
     # try:
     #  phi = np.linalg.inv(A) @ b
     # except:
-    #  phi = spsolve(A, b)
-    phi = np.linalg.inv(A) @ b
+    phi = spsolve(A, b)
+    # phi = np.linalg.inv(A) @ b
 
     # @ operation just work as np.dot
     flow = [[i, j, (phi[i] - phi[j]) * r] for i, j, r in res]
@@ -585,25 +585,32 @@ def altertating_minimization(n, edge):
     # eps = .01/m
 
     # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
-    # w0 = [1 / m for i in range(m)]
-    w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
+    w0 = [1 / m for i in range(m)]
+    # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
     # w0 = [ 0.49, 0.005, 0.5, 0.005]
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
     pre_energy = 0
+    data = []
+    import pdb 
+    pdb.set_trace()
+    
 
     for round in range(1000):
         phi, flow, energy = electrical_flow(n, res)
+        
+        data.append(energy)
+
 
         if abs(energy - pre_energy) < 1e-5:
-          break
+            break
 
         w = update_w(phi, edge)
 
         res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
 
-        pre_energy  = energy
+        pre_energy = energy
 
-    return phi, energy
+    return data
 
 
 # In[ ]: j
