@@ -242,14 +242,17 @@ def rd_edges():
             else:
                 for line in f:
                     try:
-                        e_i = [float(item) for item in line[:-1].split(" ")]
+                        e_i = [item for item in line[:-1].split(",")]
                     except:
                         pass
                     else:
-                        e_i[0] = int(e_i[0])
-                        e_i[1] = int(e_i[1])
-                        e_i.append(1)
-                        edge.append(e_i)
+                        try:
+                          e_i[0] = int(e_i[0])
+                          e_i[1] = int(e_i[1])
+                          e_i.append(1)
+                          edge.append(e_i)
+                        except :
+                            pass
             edges.append(edge)
     return edges
 
@@ -260,9 +263,6 @@ def to_excel( data, label, *args):
     except:
         f = ""
     f += label
-    import pdb 
-    pdb.set_trace()
-    
     
     # cap = pd.DataFrame(data=edge)
     df1 = pd.DataFrame(data=data[1])
@@ -320,7 +320,7 @@ def exer_graph():
         n, edge = test_graph(i)
         g, e_cap = nedge_g(n, edge)
         n, edge = g_nedge(g, e_cap)
-        runaltmin(g, n, edge, label)
+        runaltmin( n, edge, label)
 # 
 # 
 # def test_origp():
@@ -340,11 +340,12 @@ def exer_graph():
     # runaltmin(g, n, edge, label)
 # 
 # 
-# def test_dbgp():
-    # edges = rd_edges()
-    # for e_ in edges:
-        # g, e_cap, edge, n = e2graph(e_)
-        # runaltmin(g, n, edge)
+def test_dbgp():
+    edges = rd_edges()
+    
+    for e_ in edges:
+        g, e_cap, edge, n = e2graph(e_)
+        runaltmin( n, edge)
 # 
 # 
 # def test_ggp():
@@ -366,7 +367,7 @@ def exer_graph():
     # phi, cut_val, data, label1 = altertating_minimization_simple(n, edge)
     # to_excel(edge, data, label, label1)
 # 
-def runaltmin(g, n, edge, graph_label=""):
+def runaltmin( n, edge, graph_label=""):
 
     data = altertating_minimization(n, edge)
     # min_cuts, _ = find_mincut(phi, g)
@@ -399,7 +400,7 @@ func_dict = {
     1: exer_graph,
     # 2: test_origp,
     # 3: debug_gp,
-    # 4: test_dbgp,
+    4: test_dbgp,
     # 5: test_ggp,
     # 6: test_rdgp,
     # 7: test_para,
@@ -418,7 +419,7 @@ def run(param):
 if __name__ == "__main__":
     # run(6)
     # run(2)
-    run(1)
+    run(4)
     # test_rdgp()
     # debug_gp()
     # exer_graph()
