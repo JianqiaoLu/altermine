@@ -265,7 +265,7 @@ def to_excel( data, label, *args):
     f += label
     
     # cap = pd.DataFrame(data=edge)
-    df1 = pd.DataFrame(data=data[1])
+    df1 = pd.DataFrame(data=data)
     # df2 = pd.DataFrame(data=data[2])
     # df3 = pd.DataFrame(data=data[3])
     # df4 = pd.DataFrame(data=data[4])

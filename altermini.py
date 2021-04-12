@@ -353,7 +353,6 @@ def electrical_flow(n, res):
     # except:
     phi = spsolve(A, b)
     # phi = np.linalg.inv(A) @ b
-    
 
     # @ operation just work as np.dot
     flow = [[i, j, (phi[i] - phi[j]) * r] for i, j, r in res]
@@ -490,7 +489,8 @@ def getpedge(i):
         for j in range(1, i - 1):
             edge.append([j, j + 1, x])
 
-        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
+        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]]
+               for i in range(m)]
         phi, flow, energy_phi = electrical_flow(i, res)
         cap = [x[2] for x in edge]
         cong = [abs(flow[i][2]) / cap[i] for i in range(m)]
@@ -573,7 +573,8 @@ def altertating_minimization_simple(n, edge, min_cuts=[], cut_val=1):
             break
         data2.append(energy_phi)
         w = update_w(phi, edge)
-        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
+        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]]
+               for i in range(m)]
         energy_w = sum([(phi[i] - phi[j]) ** 2 * r for i, j, r in res])
 
     return phi, math.sqrt(energy_phi), data2, "-"
@@ -595,16 +596,16 @@ def altertating_minimization(n, edge):
 
     for round in range(1000):
         phi, flow, energy = electrical_flow(n, res)
-        
-        data.append(energy)
 
+        data.append(energy)
 
         if abs(energy - pre_energy) < 1e-5:
             break
 
         w = update_w(phi, edge)
 
-        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
+        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]]
+               for i in range(m)]
 
         pre_energy = energy
 

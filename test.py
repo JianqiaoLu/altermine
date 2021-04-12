@@ -19,11 +19,11 @@ v3 = (
     - 1
 )
 m = 100
-rho = 3 * m ** (1 / 3) *(eps)**(-5/3)
+rho = 3 * m ** (1 / 3) * (eps)**(-5/3)
 x = math.log((1 + eps) / (1 - eps)) / (2 * eps)
 v1 = x - math.log(x) - 1 - 1/2*math.log((1 + eps) * (1 - eps))
 v2 = math.log(1 + eps)
-print("v1 v2" ,v1,v2)
+print("v1 v2", v1, v2)
 
 
 case1 = (
@@ -38,7 +38,7 @@ case2 = (
     / (eps ** 3 / (2 * rho ** 2) - math.log(1 - eps) ** 2)
 )
 
-case3 = eps**2 /(2*rho) + math.log( 1 - eps)
+case3 = eps**2 / (2*rho) + math.log(1 - eps)
 
 
 case4 = (1 + eps)/math.exp(eps/rho)
@@ -72,3 +72,4 @@ print(case4)
 # plt.show()
 
 # plt.savefig('f1.png')
+
