@@ -323,14 +323,14 @@ def exer_graph():
         runaltmin( n, edge, label)
 # 
 # 
-# def test_origp():
-    # for i in range(1, 7):
-        # i  =  7
-        # label = "test_graph_" + str(i)
-        # n, edge = globals()[label]()
-        # g, e_cap = nedge_g(n, edge)
-        # n, edge = g_nedge(g, e_cap)
-        # runaltmin(g, n, edge, label)
+def test_origp():
+    for i in range(1, 7):
+        i  =  9
+        label = "test_graph_" + str(i)
+        n, edge = globals()[label]()
+        g, e_cap = nedge_g(n, edge)
+        n, edge = g_nedge(g, e_cap)
+        altertating_minimization_simple( n, edge)
 # 
 # 
 # def debug_gp():
@@ -398,7 +398,7 @@ def runaltmin( n, edge, graph_label=""):
 
 func_dict = {
     1: exer_graph,
-    # 2: test_origp,
+    2: test_origp,
     # 3: debug_gp,
     4: test_dbgp,
     # 5: test_ggp,
@@ -419,7 +419,7 @@ def run(param):
 if __name__ == "__main__":
     # run(6)
     # run(2)
-    run(4)
+    run(2)
     # test_rdgp()
     # debug_gp()
     # exer_graph()

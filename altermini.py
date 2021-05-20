@@ -123,9 +123,8 @@ def test_graph_8():
 def test_graph_9():
     return 3, [
         [0, 1, 5],
-        [0, 1, 5],
         [1, 2, 10],
-        [1, 2, 1],
+        [0, 2, 1],
     ]
 
 
@@ -552,12 +551,16 @@ def altertating_minimization_simple(n, edge, min_cuts=[], cut_val=1):
     global eps
     m = len(edge)
     data2 = [[]]
-    # w0 = [1 / m for i in range(m)]
-    w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
+    w0 = [eps/m,0.9-eps/m,0.1]
+    # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
     w = w0
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
+
     for round in range(1000):
         phi, flow, energy_phi = electrical_flow(n, res)
+        import pdb 
+        pdb.set_trace()
+        
 
         ans2 = sum([(phi[i] - phi[j]) ** 2 * r for i, j, r in res])
         # res = [[i, j, m* c ** 2] for i, j, c in edge]
