@@ -29,6 +29,25 @@ def random_graph(max_vertex, max_capacity):
 
 def random_graph_mulcut(max_vertex, max_capacity):
     seed(42)
+    # e_cap = g.new_edge_property("int")
+    e_dict = {}
+    edges = []
+    for i in range(0, max_vertex):
+        for j in range(i + 1, max_vertex):
+            if (i == 0 and j == (max_vertex - 1)) or (i, j) in e_dict:
+                continue
+            if (randint(1, 100) / 100) > 0.5:
+                if i == 0 or j == (max_vertex - 1):
+                    edges.append([i, j, randint(1, max_capacity * 2)])
+                else:
+                    edges.append([i, j, randint(1, max_capacity / 2)])
+                e_dict[(i, j)] = 1
+                e_dict[(j, i)] = 1
+    return edges
+
+
+def random_graph_mulcut_v1(max_vertex, max_capacity):
+    seed(42)
     g = Graph()
     e_cap = g.new_edge_property("int")
     e_dict = {}
@@ -355,22 +374,47 @@ def test_dbgp():
     # runaltmin(g, n, edge)
 # 
 # 
-# def test_rdgp():
-    # for i in range(4, 100):
-        # label = str(i)
-        # g, e_cap = random_graph_mulcut(i, 40)
-        # n, edge = g_nedge(g, e_cap)
-        # runaltmin(g, n, edge, label)
+def test_rdgp():
+    for i in range(4, 100):
+        label = str(i)
+        edge = random_graph_mulcut(i, 40)
+        runaltmin( i, edge, label)
 # 
 # 
 # def runaltmin_simple(g, n, edge, label=""):
     # phi, cut_val, data, label1 = altertating_minimization_simple(n, edge)
     # to_excel(edge, data, label, label1)
 # 
+
+def find_mincut(phi, edge):
+    min_cuts = []
+    pre = np.ones(len(phi))
+    for j in range(1, 10):
+        ind = j / 10
+        flag = np.ones(len(phi))
+        index = 0
+        min_cut = []
+        for i in range(0, len(phi)):
+            if phi[i] < ind:
+                flag[i] = 0
+            else:
+                flag[i] = 1
+        if (pre == flag).all():
+            continue
+        for e in edge:
+            v1 = e[0]
+            v2 = e[1]
+            if flag[v1] != flag[v2]:
+                min_cut.append(index)
+            index += 1
+        min_cuts.append(min_cut)
+        pre = flag
+    return min_cuts, flag
+
 def runaltmin( n, edge, graph_label=""):
 
-    data = altertating_minimization(n, edge)
-    # min_cuts, _ = find_mincut(phi, g)
+    data, phi= altertating_minimization(n, edge)
+    min_cuts, _ = find_mincut(phi, edge)
     # cut_value = 0
     # draw(g)
     # phi, cut_val, data, label1 = altertating_minimization(
@@ -379,7 +423,8 @@ def runaltmin( n, edge, graph_label=""):
     # 那如果本来min-cut就是float的时候这个就不对了
 
     # edge.append(min_cuts)
-    to_excel( data, graph_label)
+    phi, data = altertating_minimization_repeat(n, edge, min_cuts)
+    # to_excel( data, graph_label)
 
 # def test_para():
   # for i in range(4, 100):
@@ -402,7 +447,7 @@ func_dict = {
     # 3: debug_gp,
     4: test_dbgp,
     # 5: test_ggp,
-    # 6: test_rdgp,
+    6: test_rdgp,
     # 7: test_para,
     # 8: test_para_comp,
 }
@@ -417,9 +462,9 @@ def run(param):
 
 
 if __name__ == "__main__":
-    # run(6)
+    run(6)
     # run(2)
-    run(2)
+    # run(2)
     # test_rdgp()
     # debug_gp()
     # exer_graph()

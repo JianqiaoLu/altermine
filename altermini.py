@@ -1,4 +1,5 @@
 import math
+import pdb
 from graph_tool.flow import min_cut
 from graph_tool.topology import random_spanning_tree
 import numpy as np
@@ -19,7 +20,7 @@ global want
 want = 1
 
 global eps
-eps = 1e-2
+eps = 1e-20
 
 
 def test_graph_1():
@@ -430,21 +431,22 @@ def update_w(phi, edge):
 
 # In[ ]:
 
+def calnu(w, min_cuts, cap_comp):
+  
+    # flag1 = "y"
+    # for j in range(len(min_cuts)):
+    nu = 1
+    # eta = 0
 
-def calnu(w, min_cuts, cap_comp, data4, data5):
-    flag1 = "y"
-    for j in range(len(min_cuts)):
-        nu = 1
-        eta = 0
-        for i in min_cuts[j]:
-            nu *= w[i] ** (cap_comp[i])
-            eta += w[i]
-        if data5[j] != [] and flag1 == "y":
-            if nu < data4[j][-1]:
-                flag1 = "n"
-        data4[j].append(nu)
-        data5[j].append(eta)
-    return data4, data5
+    for i in min_cuts[0]:
+        nu *= w[i] ** (cap_comp[i])
+
+        # nu *= w[i]
+        # nu *= w[i] ** w[i]
+        # eta += w[i]
+    return nu
+
+
 
 
 def caljensen(min_cuts, cap_comp, w_comp, data6):
@@ -582,6 +584,93 @@ def altertating_minimization_simple(n, edge, min_cuts=[], cut_val=1):
 
     return phi, math.sqrt(energy_phi), data2, "-"
 
+def altertating_minimization_repeat(n, edge, min_cuts=[], min_w=""):
+  
+    global eps
+    m = len(edge)
+    # eps = .01/m
+
+    # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
+    # min_w=0
+
+    # w0 = [min_w, 0.5-min_w, 0.5]
+    if min_w != "":
+        w0 = [min_w, 0.5 - min_w, 0.5]
+    else:
+        w0 = [1 / m for i in range(m)]
+
+    # w0 = [1 / m for i in range(m)]
+
+    # w0[0] = 0.1
+    # w0[1] = 0.1
+
+    # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
+    # w0 = [ 0.49, 0.005, 0.5, 0.005]
+    # min_cuts[0][0] = 1
+
+    try:
+     cut_value = sum(edge[e][2] for e in min_cuts[0])
+    except: 
+      import pdb 
+      pdb.set_trace()
+    
+    cap_comp = [edge[i][2] / cut_value for i in range(len(edge))]
+    # calnu_special(w0, min_cuts, cap_comp)
+
+    res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
+
+    pre_energy = 0
+    data = []
+    w = w0
+    pre_nu = -math.inf
+    nu_data = []
+    # min_cuts[0][0] =1
+    flag = 0
+    pair = []
+
+    for round in range(1000):
+
+        phi, flow, energy = electrical_flow(n, res)
+
+        # cut_value = sum(edge[e][2] for e in min_cuts[0])
+
+        # phi = calphi(w, edge, phi)
+
+        # nu = calnewnu(w, phi, edge)
+        nu = calnu(w, min_cuts, cap_comp)
+        # nu = calnu(w, min_cuts, cp)
+
+        # for i in min_cuts[0]:
+        # f2 = open("data_nu/test.txt", "a")
+        # f2.write(str(min_w) + "_" + str(round) + "\n")
+        # f2.close()
+        pre_nu = nu
+        # nu_data.append(int(nu*100)/100)
+        nu_data.append(nu)
+
+        # try:
+        data.append(energy)
+        # except:
+          # import pdb 
+          # pdb.set_trace()
+          
+        if round > 0:
+         if abs(energy - pre_energy) < 1e-5:
+            if n == 18:
+              import pdb 
+              pdb.set_trace()
+            # plt.plot(range(round + 1), [nu_data, data])
+            # drawsubplots(round, nu_data, data, min_w, edge)
+            break
+
+        w = update_w(phi, edge)
+        # nu2 = calnewnu(w, phi, edge)
+        nu2 = calnu(w, min_cuts, cap_comp)
+        pair.append([nu, nu2])
+        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
+        pre_energy = energy
+    return phi, data
+
 
 def altertating_minimization(n, edge):
 
@@ -612,7 +701,7 @@ def altertating_minimization(n, edge):
 
         pre_energy = energy
 
-    return data
+    return data, phi
 
 
 # In[ ]: j
