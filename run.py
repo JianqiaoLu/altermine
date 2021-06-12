@@ -1,30 +1,9 @@
-from graph_tool.all import Graph
 import numpy as np
 from numpy.random import *
 import pandas as pd
 from altermini import *
 import os
 
-
-def random_graph(max_vertex, max_capacity):
-    seed(42)
-    g = Graph()
-    e_cap = g.new_edge_property("int")
-    e_dict = {}
-    for i in range(0, max_vertex):
-        g.add_vertex()
-    for i in range(0, max_vertex):
-        for j in range(i + 1, max_vertex):
-            if (i == 0 and j == max_vertex - 1) or (i, j) in e_dict:
-                continue
-            if (randint(1, 100) / 100) > 0.5:
-                srs = g.vertex(i)
-                tgt = g.vertex(j)
-                e = g.add_edge(srs, tgt)
-                e_cap[e] = randint(1, max_capacity)
-                e_dict[(i, j)] = 1
-                e_dict[(j, i)] = 1
-    return g, e_cap
 
 
 def random_graph_mulcut(max_vertex, max_capacity):
@@ -46,28 +25,6 @@ def random_graph_mulcut(max_vertex, max_capacity):
     return edges
 
 
-def random_graph_mulcut_v1(max_vertex, max_capacity):
-    seed(42)
-    g = Graph()
-    e_cap = g.new_edge_property("int")
-    e_dict = {}
-    for i in range(0, max_vertex):
-        g.add_vertex()
-    for i in range(0, max_vertex):
-        for j in range(i + 1, max_vertex):
-            if (i == 0 and j == (max_vertex - 1)) or (i, j) in e_dict:
-                continue
-            if (randint(1, 100) / 100) > 0.5:
-                srs = g.vertex(i)
-                tgt = g.vertex(j)
-                e = g.add_edge(srs, tgt)
-                if i == 0 or j == (max_vertex - 1):
-                    e_cap[e] = randint(1, max_capacity * 2)
-                else:
-                    e_cap[e] = randint(1, max_capacity / 2)
-                e_dict[(i, j)] = 1
-                e_dict[(j, i)] = 1
-    return g, e_cap
 
 
 def debug_graph(file):
@@ -347,9 +304,8 @@ def test_origp():
         i  =  9
         label = "test_graph_" + str(i)
         n, edge = globals()[label]()
-        g, e_cap = nedge_g(n, edge)
-        n, edge = g_nedge(g, e_cap)
-        altertating_minimization_simple( n, edge)
+        runaltmin( n, edge, label, 1e-5)
+        # altertating_minimization_simple( n, edge)
 # 
 # 
 # def debug_gp():
@@ -378,6 +334,7 @@ def test_rdgp():
     for i in range(4, 100):
         label = str(i)
         edge = random_graph_mulcut(i, 40)
+        
         runaltmin( i, edge, label)
 # 
 # 
@@ -411,7 +368,7 @@ def find_mincut(phi, edge):
         pre = flag
     return min_cuts, flag
 
-def runaltmin( n, edge, graph_label=""):
+def runaltmin( n, edge, graph_label="", min_w = ""):
 
     data, phi= altertating_minimization(n, edge)
     min_cuts, _ = find_mincut(phi, edge)
@@ -423,7 +380,7 @@ def runaltmin( n, edge, graph_label=""):
     # 那如果本来min-cut就是float的时候这个就不对了
 
     # edge.append(min_cuts)
-    phi, data = altertating_minimization_repeat(n, edge, min_cuts)
+    phi, data = altertating_minimization_repeat(n, edge, min_cuts, min_w)
     # to_excel( data, graph_label)
 
 # def test_para():
@@ -462,11 +419,9 @@ def run(param):
 
 
 if __name__ == "__main__":
-    run(6)
-    # run(2)
-    # run(2)
-    # test_rdgp()
-    # debug_gp()
+#     run(6)
+#     run(6)
+    run(2)
     # exer_graph()
     # test_graph(4)
     # test_dbgp()
