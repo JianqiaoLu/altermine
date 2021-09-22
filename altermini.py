@@ -19,7 +19,7 @@ global want
 want = 1
 
 global eps
-eps = 1e-15
+eps = 1e-10
 
 
 def test_graph_1():
@@ -72,6 +72,40 @@ def test_graph_4():
     return 6, [[0, 1, 20], [1, 2, 8], [2, 3, 6], [2, 4, 14], [3, 4, 6], [4, 5, 12]]
 
 
+def test_graph_12():
+    return 6, [
+        [0, 1, 20],
+        [0, 2, 8],
+        [1, 3, 6],
+        [2, 4, 14],
+        [3, 5, 10],
+        [4, 5, 11],
+    ]
+
+
+def test_graph_11():
+    # return 6, [
+    # [0, 1, 20],
+    # [0, 2, 8],
+    # [1, 3, 6],
+    # [2, 4, 14],
+    # [3, 5, 10],
+    # [4, 5, 11],
+    # ]
+    return 8, [
+        [0, 1, 20],
+        [0, 2, 8],
+        [1, 3, 6],
+        [1, 4, 19],
+        [2, 5, 14],
+        [2, 6, 9],
+        [3, 7, 17],
+        [4, 7, 28],
+        [5, 7, 10],
+        [6, 7, 11],
+    ]
+
+
 def test_graph_5():
     return 14, [
         [0, 1, 20],
@@ -93,6 +127,9 @@ def test_graph_5():
         [11, 13, 11],
         [12, 13, 7],
     ]
+
+
+#
 
 
 def test_graph_6():
@@ -119,13 +156,12 @@ def test_graph_8():
         [1, 2, 2],
     ]
 
+# def test_graph_9():
+    # return 3, [
+        # [0, 1, 1],
+        # [1, 2, 60],
+    # ]
 
-def test_graph_9():
-    return 3, [
-        [0, 1, 1],
-        [1, 2, 60],
-        [0, 2, 8],
-    ]
 
 
 def test_graph_10():
@@ -160,6 +196,17 @@ def test_graph_cong():
     ]
 
 
+from numpy.random import *
+
+
+def seriescircuit(k, max_capacity):
+    n = k
+    edges = []
+    for i in range(k - 1):
+        edges.append([i, i + 1, randint(1, max_capacity * 2)])
+    return edges
+
+
 def test_graph(k):
     n = k * (k - 1) + 2
     vertex_list = np.array([i for i in range(1, k + 1)])
@@ -172,12 +219,12 @@ def test_graph(k):
 
     for j in range(k - 2):
         for i in range(k):
-            edges.append([lists[j][i], lists[j + 1][i], 1])
+            edges.append([lists[j][i], lists[j + 1][i], randint(1, 40)])
 
     for i in range(k):
-        edges.append([lists[-1][i], k * (k - 1) + 1, 1])
+        edges.append([lists[-1][i], k * (k - 1) + 1, randint(1, 40)])
 
-    edges.append([0, k * (k - 1) + 1, 1])
+    # edges.append([0, k * (k - 1) + 1, 1])
 
     return n, edges
 
@@ -351,7 +398,7 @@ def electrical_flow(n, res):
     #  phi = np.linalg.inv(A) @ b
     # except:
     phi = spsolve(A, b)
-    
+
     # phi = np.linalg.inv(A) @ b
 
     # @ operation just work as np.dot
@@ -365,7 +412,7 @@ def electrical_flow(n, res):
 
 
 # phi, flow, energy = electrical_flow(n, edge)
- 
+
 # print(phi)
 # print(flow)
 # print("energy:",energy)
@@ -394,17 +441,40 @@ def update_cvx(phi, edge):
     return x.value
 
 
+def update_w_v2(phi, edge, energy, flow, w):
+    eps_m = 1e-10 / len(edge)
+    cap = [x[2] for x in edge]
+
+    cong = [abs(flow[i][2]) / cap[i] for i in range(len(edge))]
+    max_e = cong.index(max(cong))
+    old_w = w[max_e]
+
+    w[max_e] = (
+        abs(phi[edge[max_e][0]] - phi[edge[max_e][1]]) * cap[max_e] / math.sqrt(energy)
+    )
+    if w[max_e] < eps_m:
+        w[max_e] = eps_m
+    delta = w[max_e] - old_w
+    w = [w[i] / (1 + delta) for i in range(len(edge))]
+
+    # sum_w = sum(w)
+    # new_w = [w[i]/sum_w for i in range(len(edge))]
+    return w
+
+
 def update_w(phi, edge):
-    global eps
-    eps_m = eps/ len(edge)
-    W = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
-    w = [1 / W * abs(phi[i] - phi[j]) * c for i, j, c in edge]
+    # global eps
+    eps_m = 1e-10 / len(edge)
+    W0 = sum([abs(phi[i] - phi[j]) * c for i, j, c in edge])
+    w = [1 / W0 * abs(phi[i] - phi[j]) * c for i, j, c in edge]
     w_hat = [i for i in range(len(w)) if w[i] < eps_m]
     pre = []
 
     while len(w_hat):
         if pre == w_hat:
             break
+
+        W = W0
 
         for k in w_hat:
             W -= abs(phi[edge[k][0]] - phi[edge[k][1]]) * edge[k][2]
@@ -418,17 +488,9 @@ def update_w(phi, edge):
         #   print(iter, w_hat)
         pre = w_hat
         w_hat = [i for i in range(0, len(w)) if w[i] <= eps_m]
-    # if iter % 10 == 0:
-    #   import pdb
-    #   pdb.set_trace()
 
     return w
 
-    # while min(uc_wets) < eps_m:
-    #   index  = uc_wets.index(min(uc_wets))
-    #   uc_wets[index]  = eps_m
-
-    # return
 
 
 # In[ ]:
@@ -436,10 +498,9 @@ def update_w(phi, edge):
 
 def calnu(w, min_cuts, cap_comp):
 
-    nu = 1
-
-    for i in min_cuts[0]:
-        nu *= w[i] ** (cap_comp[i])
+    nu = 0
+    for i in min_cuts[1]:
+        nu += cap_comp[i]*math.log(w[i])
     return nu
 
 
@@ -577,77 +638,91 @@ def altertating_minimization_simple(n, edge, min_cuts=[], cut_val=1):
     return phi, math.sqrt(energy_phi), data2, "-"
 
 
-def drawsubplots(round, nu_data, data, min_w, edge):
-    fig, axes = plt.subplots(1, 2)
+def drawsubplots(round, nu_data, data, min_w, edge, graph_label=""):
+    fig, axes = plt.subplots(1, 1)
 
-    axes[0].plot(range(round + 1), nu_data, label="nu")
+    # axes[0].plot(range(round + 1), nu_data, label="nu")
     # ax.plot(x,x**3,label='cubic')
-    for a, b in zip(range(round + 2), nu_data):
-        axes[1].text(a, b, (b), ha="center", va="bottom", fontsize=7)
-    axes[1].plot(range(round + 1), data, label="energy(10^3)")
-    for a, b in zip(range(round + 1), data):
-        axes[1].text(a, b, (b), ha="center", va="bottom", fontsize=7)
+    # for a, b in zip(range(round + 2), nu_data):
+    # axes[1].text(a, b, (b), ha="center", va="bottom", fontsize=7)
+    axes.plot(range(round + 1), data, label="energy(10^3)")
+    # for a, b in zip(range(round + 1), data):
+    # axes[1].text(a, b, (b), ha="center", va="bottom", fontsize=7)
     # axes.set_xlabel("iter")
     # axes[0].set_ylabel("nu")
     # axes[1].set_ylabel("ennergy")
     # axes.set_title("simple plot")
-    axes[0].legend()
-    axes[1].legend()
     if min_w != "":
-        plt.savefig("data_nu/" + str(min_w) + ".png")
+        plt.savefig("data_energy/" + str(min_w) + graph_label + ".png")
     else:
-        plt.savefig("data_nu/" + str(len(edge)) + ".png")
+        plt.savefig("data_energy/" + str(len(edge)) + graph_label + ".png")
     plt.close()
 
 
 def calnewnu(w, phi, edge):
     nu = 0
     for i in range(len(edge)):
-        nu += abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i])
+        # nu += abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i])
+        nu += w[i] * math.log(edge[i][2])
         # nu *= w[i]**(abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2]  )
 
     return nu
 
 
-def altertating_minimization_repeat(n, edge, min_cuts=[], min_w=""):
+def test_graph_9():
+    return 2, [
+        [0, 1, 4],
+        [0, 1,1],
+    ]
+
+def calnu3(w, phi, edge):
+    sum = 0
+    for i in range(len(edge)):
+        sum += abs(phi[edge[i][0]]-phi[edge[i][1]])*edge[i][2]/w[i]
+
+    return  sum
+def altertating_minimization_repeat(n, edge, min_cuts=[], min_w="", graph_label=""):
+
 
     global eps
     m = len(edge)
-    # eps = .01/m
-
-    # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
-    # min_w=0
-
-    # w0 = [min_w, 0.5-min_w, 0.5]
-    
+    # min_w  = 1e-9
     if min_w != "":
         # min_w=1e-10
-        w0 = [ min_w,0.5 - min_w, 0.5]
+        w0 = [min_w, 0.5 - min_w, 0.5]
     else:
         w0 = [1 / m for i in range(m)]
-    
-
-    # w0 = [1 / m for i in range(m)]
-
-    # w0[0] = 0.1
-    # w0[1] = 0.1
-
-    # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
-    # w0 = [ 0.49, 0.005, 0.5, 0.005]
-    # min_cuts[0][0] = 1
-
     try:
         cut_value = sum(edge[e][2] for e in min_cuts[0])
     except:
         import pdb
 
         pdb.set_trace()
+    # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
+    # w0 = [0.19046305 ,0.0014807  ,0.34618847 ,0.00529762 ,0.33194191 ,0.12462825]
+    # w0 = [0.14532576 , 0.00118052 , 0.00503939 , 0.01680416 , 0.75386098 , 0.07778917]
+    # w0  = [0.03375086 , 0.39222593 , 0.00116369 ,0.08582277 ,0.18180552 ,0.30523123]
+    # w0 = [5.37886204e-01 , 2.31674073e-04 , 3.29376744e-01 , 1.06886365e-02 , 4.37267332e-02 , 7.80900076e-02]
 
+    # w0 = [3.06946335e-01 , 1.20572700e-03 , 4.99763931e-02 , 3.20740434e-04 , 1.33517341e-01 , 5.08033464e-01]
+    # w0 =[0.14913889 ,0.00074435 ,0.27720958 ,0.08549531 ,0.05230445 ,0.43510742]
+    # w0= [3.40764547e-01 , 6.66001388e-02 , 1.89623456e-04 , 4.39363273e-03 , 4.78474157e-01 , 1.09577901e-01]
+
+    # w0 = [1.47258355e-04 ,2.92010172e-02 ,1.04407775e-01 ,1.69785429e-01 ,6.49951725e-02 ,1.48863572e-02 ,1.96106085e-01 ,2.44524948e-01 ,4.92841699e-02 ,1.26661789e-01]
+    # w0 = [0.00294123, 0.07562515, 0.01679688, 0.08671521, 0.07206413,
+    #    0.04794219, 0.02869614, 0.01344727, 0.07795043, 0.08203088,
+    #    0.1002224 , 0.00253498, 0.01172668, 0.04145523, 0.09199311,
+    #    0.06622316, 0.01825812, 0.16337681]
+    # w0=[2.63870650e-04 ,2.92394545e-01 ,1.76295766e-01 ,5.15374500e-02
+    #  ,8.52685574e-03 ,2.23184250e-01 ,5.32020966e-02 ,2.54515975e-02
+    #  ,4.14745221e-02 ,1.27669047e-01]
+    # w0 = [1e-8, 1- 1e-8]
     cap_comp = [edge[i][2] / cut_value for i in range(len(edge))]
+    w0 =[2/3,1/3]
+    w0 = [1 / m for i in range(m)]
     # calnu_special(w0, min_cuts, cap_comp)
 
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
-    
 
     pre_energy = 0
     data = []
@@ -658,35 +733,52 @@ def altertating_minimization_repeat(n, edge, min_cuts=[], min_w=""):
     # min_cuts[0][0] =1
     flag = 0
     pair = []
-    nu1_data= []
-    phi = [1,1,0]
+    # nu1_data = []
+    phi = [1, 1, 0]
     for round in range(1000):
-        val1 = [abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i]) for i in range(len(edge))]
-        phi, flow, energy = electrical_flow(n, res)
-        val2 = [abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i]) for i in range(len(edge))]
-        nu = calnewnu(w, phi, edge)
-        data.append(energy)
-        # except:
-        # import pdb
-        # pdb.set_trace()
 
+        # val1 = [abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i]) for i in range(len(edge))]
+
+        phi, flow, energy = electrical_flow(n, res)
+        
+        # val2 = [abs(phi[edge[i][0]] - phi[edge[i][1]]) * edge[i][2] * math.log(w[i]) for i in range(len(edge))]
+        # nu = calnewnu(w, phi, edge)
+        # nu = calnu(w,min_cuts,cap_comp)
+        nu=calnu3(w,phi,edge)
+        import pdb 
+        pdb.set_trace()
+        energy = math.sqrt(energy)
+        
+        # if (
+        # round > 0
+        # and (-energy + data[-1]) < 1
+        # and (energy - cut_value) > 2
+        # and not flag
+        # ):
+        # flag = 1
+        data.append(energy)
+
+        nu_data.append(nu)
         if abs(energy - pre_energy) < 1e-5:
-            # plt.plot(range(round + 1), [nu_data, data])
-            # drawsubplots(round, nu_data, data, min_w, edge)
-            if flag == 1:
-                f2 = open("data_nu/newnu.txt", "a")
-                f2.write(str(n) + "_" + "\n")
-                f2.close()
+            # if flag == 1:
+                # drawsubplots(round, nu_data, data, min_w, edge, graph_label)
+                # f2 = open("data_energy/energy.txt", "a")
+                # f2.write(str(n) + "_" + graph_label + "_" + "\n")
+                # f2.write(str(w0) + "_" + "\n")
+                # f2.write("\n")
+                # f2.close()
+# 
             break
         w = update_w(phi, edge)
-        
-        nu2 = calnewnu(w, phi, edge)
+        # w = update_w_v2(phi, edge, energy, flow, w)
+
+        # nu2 = calnewnu(w, phi, edge)
         # if nu > nu2:
-            # flag = 1
+        # flag = 1
         # nu2 = calnu(w, min_cuts, cap_comp)
-        pair.append([nu, nu2])
-        res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
-        pre_energy = energy
+        # pair.append([nu, nu2])
+        # res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
+        # pre_energy = energy
     return phi, data
 
 
@@ -700,7 +792,9 @@ def altertating_minimization(n, edge):
     w0 = [1 / m for i in range(m)]
     # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
     # w0 = [ 0.49, 0.005, 0.5, 0.005]
+
     res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w0[i]] for i in range(m)]
+
     pre_energy = 0
     data = []
 

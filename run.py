@@ -290,21 +290,14 @@ def to_excel( data, label, *args):
 
 
 
-def exer_graph():
-    for i in range(4, 40):
-        label = "kpath_graph_rd" + str(i)
-        n, edge = test_graph(i)
-        g, e_cap = nedge_g(n, edge)
-        n, edge = g_nedge(g, e_cap)
-        runaltmin( n, edge, label)
-# 
 # 
 def test_origp():
-    for i in range(1, 7):
-        i  =  9
+    for i in range(1, 10):
+        i =9
         label = "test_graph_" + str(i)
         n, edge = globals()[label]()
-        runaltmin( n, edge, label, 1e-5)
+        
+        runaltmin( n, edge, label)
         # altertating_minimization_simple( n, edge)
 # 
 # 
@@ -330,12 +323,23 @@ def test_dbgp():
     # runaltmin(g, n, edge)
 # 
 # 
+def test_kpara():
+    for i in range(2, 100):
+    #    i = 
+       n,edge = test_graph(i)
+       runaltmin(n,edge,"kpara")
+def test_sc():
+    for i in range(10, 100):
+       edge = seriescircuit(i,40)
+       runaltmin(i,edge,"seriescircuit")
+      
 def test_rdgp():
     for i in range(4, 100):
+        i = 10
         label = str(i)
         edge = random_graph_mulcut(i, 40)
         
-        runaltmin( i, edge, label)
+        runaltmin( i, edge, "random_graph")
 # 
 # 
 # def runaltmin_simple(g, n, edge, label=""):
@@ -380,18 +384,21 @@ def runaltmin( n, edge, graph_label="", min_w = ""):
     # 那如果本来min-cut就是float的时候这个就不对了
 
     # edge.append(min_cuts)
-    phi, data = altertating_minimization_repeat(n, edge, min_cuts, min_w)
+    # for i in range(100):
+    # phi, data = altertating_minimization_repeat(n, edge, min_cuts, min_w, graph_label)
+    phi, data = altertating_minimization(n, edge)
+
     # to_excel( data, graph_label)
 
 # def test_para():
-  # for i in range(4, 100):
+#   for i in range(4, 100):
     # i = 20
     # data =  onestepmini(i)
     # 
     # data_to_excel(data, i)
 # 
 # def test_para_comp():
-  # for i in range(4, 100):
+#   for i in range(4, 100):
     # n, edge=  getpedge(i)
     # g, e_cap = nedge_g(n, edge)
     # runaltmin_simple(g, n, edge, "para" + str(i))
@@ -399,14 +406,16 @@ def runaltmin( n, edge, graph_label="", min_w = ""):
    
 
 func_dict = {
-    1: exer_graph,
+    # 1: exer_graph,
     2: test_origp,
     # 3: debug_gp,
-    4: test_dbgp,
+    # 4: test_dbgp,
     # 5: test_ggp,
     6: test_rdgp,
     # 7: test_para,
     # 8: test_para_comp,
+    9:test_sc,
+    10:test_kpara,
 }
 
 
@@ -420,8 +429,10 @@ def run(param):
 
 if __name__ == "__main__":
 #     run(6)
-#     run(6)
+    # run(6)
     run(2)
+    # run(6)
+    # run(9)
+    # run(10)
     # exer_graph()
-    # test_graph(4)
     # test_dbgp()
