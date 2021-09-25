@@ -177,6 +177,14 @@ def test_graph_10():
         [1, 5, 2.5],
     ]
 
+def test_graph_13():
+    return 5, [
+        [0, 1, 3],
+        [1, 2, 1],
+        [1, 3, 1],
+        [2, 4, 10],
+        [3, 4, 10],
+    ]
 
 def test_graph_cong():
     return 10, [
@@ -800,6 +808,9 @@ def altertating_minimization(n, edge):
 
     for round in range(1000):
         phi, flow, energy = electrical_flow(n, res)
+        import pdb 
+        pdb.set_trace()
+        
 
         data.append(energy)
 

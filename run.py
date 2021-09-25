@@ -293,7 +293,7 @@ def to_excel( data, label, *args):
 # 
 def test_origp():
     for i in range(1, 10):
-        i =9
+        i =13
         label = "test_graph_" + str(i)
         n, edge = globals()[label]()
         
