@@ -19,7 +19,7 @@ global want
 want = 1
 
 global eps
-eps = 1e-10
+eps = 1e-5
 
 
 def test_graph_1():
@@ -179,11 +179,11 @@ def test_graph_10():
 
 def test_graph_13():
     return 5, [
-        [0, 1, 3],
+        [0, 1, 5],
         [1, 2, 1],
         [1, 3, 1],
-        [2, 4, 10],
-        [3, 4, 10],
+        [2, 4, 2],
+        [3, 4, 3],
     ]
 
 def test_graph_cong():
@@ -798,6 +798,7 @@ def altertating_minimization(n, edge):
 
     # w0 = np.random.dirichlet(np.ones(m), size=1)[0]
     w0 = [1 / m for i in range(m)]
+    w0  = [ 0.2, eps, eps, 0.4- eps, 0.4 - eps]
     # w0 = [eps / m] + [(1 - eps / m) / (m - 1)] * (m - 1)
     # w0 = [ 0.49, 0.005, 0.5, 0.005]
 
@@ -811,6 +812,8 @@ def altertating_minimization(n, edge):
         import pdb 
         pdb.set_trace()
         
+        
+        
 
         data.append(energy)
 
@@ -822,6 +825,8 @@ def altertating_minimization(n, edge):
         res = [[edge[i][0], edge[i][1], edge[i][2] ** 2 / w[i]] for i in range(m)]
 
         pre_energy = energy
+    
+    
 
     return data, phi
 
